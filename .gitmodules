@@ -1,0 +1,3 @@
+[submodule "projects/pd_update"]
+	path = projects/pd_update
+	url = https://github.com/PureDarwin/PureDarwin-System-Updater
