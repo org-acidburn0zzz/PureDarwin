@@ -68,10 +68,6 @@ def recursive_build(project, is_header=False):
 
 group_output = subprocess.check_output(['darwinxref', 'group', sys.argv[1]])
 group_output = group_output.split('\n')
-group_contents = []
 for line in group_output:
     for project in line.split(' '):
-        group_contents.append(project)
-
-for project in group_contents:
-    recursive_build(project)
+        recursive_build(project)
