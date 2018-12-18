@@ -33,13 +33,6 @@ build_deps_done = {}
 # This variable contains a list of projects that must be built using -nochroot.
 chroot_blacklist = ['xnubuild']
 
-group_output = subprocess.check_output(['darwinxref', 'group', sys.argv[1]])
-group_output = group_output.split('\n')
-group_contents = []
-for line in group_output:
-    for project in line.split(' '):
-        group_contents.append(project)
-
 def recursive_build(project, is_header=False):
     if project == '': return
 
@@ -72,6 +65,13 @@ def recursive_build(project, is_header=False):
 
     print("***", *darwinbuild_argv)
     subprocess.check_call(darwinbuild_argv, stdout=sys.stdout, stderr=sys.stderr)
+
+group_output = subprocess.check_output(['darwinxref', 'group', sys.argv[1]])
+group_output = group_output.split('\n')
+group_contents = []
+for line in group_output:
+    for project in line.split(' '):
+        group_contents.append(project)
 
 for project in group_contents:
     recursive_build(project)
