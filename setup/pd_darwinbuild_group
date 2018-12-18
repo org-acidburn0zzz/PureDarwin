@@ -97,4 +97,7 @@ for project in group_contents:
     recursive_build(project)
 
 script_output.close()
+
+# We exec the script instead of doing check_output() calls,
+# so we can see the output as it comes.
 os.execl('/bin/bash', ['-c', script_output_path])
