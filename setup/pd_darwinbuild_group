@@ -27,14 +27,6 @@ if len(sys.argv) < 2:
     print('Runs darwinbuild on each project in the given darwinbuild groups (including any required dependencies)')
     exit(1)
 
-if not os.path.isdir(os.readlink(os.path.join(darwin_buildroot, 'BuildRoot'))):
-    try:
-        print('Attaching build root disk image...')
-        subprocess.check_call(['hdiutil', 'attach', '.build/buildroot.sparsebundle', '-readwrite', '-owners', 'on'], cwd=darwin_buildroot, stdout=None)
-    except CalledProcessError, e:
-        print('Could not attach buildroot.sparsebundle:', e, file=sys.stderr)
-        exit(1)
-
 header_deps_done = {}
 build_deps_done = {}
 
