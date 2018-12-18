@@ -33,7 +33,8 @@
 	<dict>
 		<key>boot</key>
 		<array>
-			<string>xnu AppleI386GenericPlatform corecrypto booter</string>
+			<string>xnubuild AppleI386GenericPlatform corecrypto booter</string>
+			<string>libpthread libcoreservices</string>
 		</array>
 	</dict>
 
