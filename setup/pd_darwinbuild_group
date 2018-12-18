@@ -67,7 +67,7 @@ def recursive_build(project, is_header=False):
     if project in chroot_blacklist:
         darwinbuild_argv.append('-nochroot')
     if is_header:
-        darwinbuild_argv.append('-header')
+        darwinbuild_argv.append('-headers')
     darwinbuild_argv.append(project)
 
     print("***", *darwinbuild_argv)
