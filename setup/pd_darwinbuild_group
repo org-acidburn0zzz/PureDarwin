@@ -40,14 +40,6 @@ for line in group_output:
     for project in line.split(' '):
         group_contents.append(project)
 
-script_output_path = 'darwinbuild-group.sh'
-script_output = open(script_output_path, 'w')
-print('#!/bin/bash', file=script_output)
-print('', file=script_output)
-print('# Error out if a darwinbuild invocation fails', file=script_output)
-print('set -e', file=script_output)
-print('', file=script_output)
-
 def recursive_build(project, is_header=False):
     if project == '': return
 
@@ -78,18 +70,8 @@ def recursive_build(project, is_header=False):
         darwinbuild_argv.append('-header')
     darwinbuild_argv.append(project)
 
-    if is_header:
-        print('Will build:', project, '(header)')
-    else:
-        print('Will build:', project)
-
-    print(*darwinbuild_argv, file=script_output)
+    print("***", *darwinbuild_argv)
+    subprocess.check_call(darwinbuild_argv, stdout=sys.stdout, stderr=sys.stderr)
 
 for project in group_contents:
     recursive_build(project)
-
-script_output.close()
-
-# We exec the script instead of doing check_output() calls,
-# so we can see the output as it comes.
-os.execl('/bin/bash', ['-c', script_output_path])
