@@ -1,0 +1,100 @@
+#!/usr/bin/python
+
+from __future__ import print_function
+import sys, os
+import plistlib
+import subprocess
+
+darwin_buildroot = os.getcwd()
+if os.getenv('DARWIN_BUILDROOT') is not None:
+    darwin_buildroot = os.getenv('DARWIN_BUILDROOT')
+    os.chdir(darwin_buildroot)
+
+valid_buildroot = True
+for name in ['Roots', 'Sources', 'Symbols', 'Headers', 'Logs']:
+    valid_buildroot = os.path.isdir(name)
+
+if not valid_buildroot:
+    print('ERROR: Could not find darwinbuild root, this is required', file=sys.stderr)
+    print('Please change your working directory to one initialized by:', file=sys.stderr)
+    print('\t$ darwinbuild -init <plist>', file=sys.stderr)
+    print('Alternatively, you may set the DARWIN_BUILDROOT environment variable to the', file=sys.stderr)
+    print('absolute path of that directory.', file=sys.stderr)
+    exit(1)
+
+if len(sys.argv) < 2:
+    print('usage:', sys.argv[0], 'group [...]', file=sys.stderr)
+    print('Runs darwinbuild on each project in the given darwinbuild groups (including any required dependencies)')
+    exit(1)
+
+if not os.path.isdir(os.readlink(os.path.join(darwin_buildroot, 'BuildRoot'))):
+    try:
+        print('Attaching build root disk image...')
+        subprocess.check_call(['hdiutil', 'attach', '.build/buildroot.sparsebundle', '-readwrite', '-owners', 'on'], cwd=darwin_buildroot, stdout=None)
+    except CalledProcessError, e:
+        print('Could not attach buildroot.sparsebundle:', e, file=sys.stderr)
+        exit(1)
+
+header_deps_done = {}
+build_deps_done = {}
+
+# This variable contains a list of projects that must be built using -nochroot.
+chroot_blacklist = ['xnubuild']
+
+group_output = subprocess.check_output(['darwinxref', 'group', sys.argv[1]])
+group_output = group_output.split('\n')
+group_contents = []
+for line in group_output:
+    for project in line.split(' '):
+        group_contents.append(project)
+
+script_output_path = 'darwinbuild-group.sh'
+script_output = open(script_output_path, 'w')
+print('#!/bin/bash', file=script_output)
+print('', file=script_output)
+print('# Error out if a darwinbuild invocation fails', file=script_output)
+print('set -e', file=script_output)
+print('', file=script_output)
+
+def recursive_build(project, is_header=False):
+    if project == '': return
+
+    if is_header:
+        if project in header_deps_done:
+            return
+    else:
+        if project in build_deps_done:
+            return
+
+    if is_header:
+        header_deps_done[project] = True
+    else:
+        build_deps_done[project] = True
+
+    build_deps = subprocess.check_output(['darwinxref', 'dependencies', '-build', project]).split('\n')
+    header_deps = subprocess.check_output(['darwinxref', 'dependencies', '-header', project]).split('\n')
+
+    for dep in header_deps:
+        recursive_build(dep, is_header=True)
+    for dep in build_deps:
+        recursive_build(dep, is_header=False)
+
+    darwinbuild_argv = ['darwinbuild']
+    if project in chroot_blacklist:
+        darwinbuild_argv.append('-nochroot')
+    if is_header:
+        darwinbuild_argv.append('-header')
+    darwinbuild_argv.append(project)
+
+    if is_header:
+        print('Will build:', project, '(header)')
+    else:
+        print('Will build:', project)
+
+    print(*darwinbuild_argv, file=script_output)
+
+for project in group_contents:
+    recursive_build(project)
+
+script_output.close()
+os.execl('/bin/bash', ['-c', script_output_path])
