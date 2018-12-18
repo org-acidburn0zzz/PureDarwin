@@ -40,6 +40,21 @@
 
 	<key>projects</key>
 	<dict>
+		<key>AppleI386GenericPlatform</key>
+		<dict>
+			<key>version</key>
+			<string>11.1</string>
+			<key>github</key>
+			<string>PureDarwin/Libsystem</string>
+			<key>dependencies</key>
+			<dict>
+				<key>header</key>
+				<array>
+					<string>xnubuild</string>
+				</array>
+			</dict>
+		</dict>
+
 		<key>Libsystem</key>
 		<dict>
 			<key>version</key>
